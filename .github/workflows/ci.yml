@@ -39,11 +39,10 @@ jobs:
       - name: Run tests (offline, fixture mode)
         run: python -m unittest discover -s tests -t tests -p 'test_*.py'
         env:
+          # chaves de env no Actions não diferenciam maiúsculas: http_proxy e HTTP_PROXY juntas invalidam o workflow.
+          # O Python (urllib) lê as minúsculas.
           http_proxy: http://127.0.0.1:9
           https_proxy: http://127.0.0.1:9
-          HTTP_PROXY: http://127.0.0.1:9
-          HTTPS_PROXY: http://127.0.0.1:9
           no_proxy: ""
-          NO_PROXY: ""
       - name: Enforce coverage floor on parsers and severity derivation
         run: python tests/coverage_check.py
