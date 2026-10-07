@@ -1,0 +1,7 @@
+# Example pinned Python dependencies for dependency-auditor.
+# Audited offline against examples/osv-fixture.json:
+#
+#   AUDITOR_OSV_FIXTURE=examples/osv-fixture.json ./app examples/requirements.txt
+
+flask==1.0.0
+requests[security]==2.19.0

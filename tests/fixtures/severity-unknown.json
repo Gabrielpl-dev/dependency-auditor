@@ -1,0 +1,10 @@
+{
+  "PyPI:requests@2.19.0": [
+    {
+      "id": "GHSA-fixture-unknown-0001",
+      "aliases": [],
+      "summary": "Fixture-only finding with no severity information",
+      "affected": []
+    }
+  ]
+}

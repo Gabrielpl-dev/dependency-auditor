@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: pip install "ruff==0.15.22"
+      - name: Lint
+        run: ruff check .
+
+  test:
+    # The runner is not guaranteed to be offline, so every step below relies on
+    # fixture mode only: AUDITOR_OSV_FIXTURE is exported and the proxy variables
+    # point at a dead port, so any accidental socket would fail the run.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.12"]
+    env:
+      AUDITOR_OSV_FIXTURE: tests/fixtures/basic.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run tests (offline, fixture mode)
+        run: python -m unittest discover -s tests -t tests -p 'test_*.py'
+        env:
+          http_proxy: http://127.0.0.1:9
+          https_proxy: http://127.0.0.1:9
+          HTTP_PROXY: http://127.0.0.1:9
+          HTTPS_PROXY: http://127.0.0.1:9
+          no_proxy: ""
+          NO_PROXY: ""
+      - name: Enforce coverage floor on parsers and severity derivation
+        run: python tests/coverage_check.py

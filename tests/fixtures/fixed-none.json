@@ -1,0 +1,16 @@
+{
+  "PyPI:requests@2.19.0": [
+    {
+      "id": "GHSA-fixture-no-fixed",
+      "aliases": [],
+      "summary": "Only introduced events",
+      "database_specific": {"severity": "LOW"},
+      "affected": [
+        {
+          "package": {"ecosystem": "PyPI", "name": "requests"},
+          "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}]}]
+        }
+      ]
+    }
+  ]
+}

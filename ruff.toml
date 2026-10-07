@@ -1,0 +1,10 @@
+line-length = 100
+target-version = "py38"
+
+[lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
+
+[lint.per-file-ignores]
+# Black-box tests intentionally manipulate sys.path and use long fixture literals.
+"tests/*" = ["E402"]

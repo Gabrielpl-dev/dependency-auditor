@@ -1,0 +1,18 @@
+{
+  "PyPI:requests@2.19.0": [
+    {
+      "id": "GHSA-fixture-high-0001",
+      "aliases": [],
+      "summary": "Fixture-only high severity finding",
+      "database_specific": {"severity": "HIGH"},
+      "affected": [
+        {
+          "package": {"ecosystem": "PyPI", "name": "requests"},
+          "ranges": [
+            {"type": "ECOSYSTEM", "events": [{"introduced": "0"}, {"fixed": "2.20.0"}]}
+          ]
+        }
+      ]
+    }
+  ]
+}
