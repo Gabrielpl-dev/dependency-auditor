@@ -99,7 +99,12 @@ class FixtureEnvTest(unittest.TestCase):
 
 class OnlineSourceTest(unittest.TestCase):
     def query(self, payload, triples=None):
-        with mock.patch.object(osv.urllib.request, "urlopen", return_value=_FakeResponse(payload)):
+        def fake_urlopen(request, timeout=None):
+            if request.get_method() == "GET":
+                return _FakeResponse({"id": request.full_url.rsplit("/", 1)[-1]})
+            return _FakeResponse(payload)
+
+        with mock.patch.object(osv.urllib.request, "urlopen", side_effect=fake_urlopen):
             return osv.OnlineSource().query(triples or [TRIPLE])
 
     def test_successful_batch(self):

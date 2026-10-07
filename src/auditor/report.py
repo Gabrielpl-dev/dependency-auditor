@@ -6,7 +6,7 @@ import sys
 
 from . import SCHEMA_VERSION, TOOL_NAME, __version__
 from . import severity as severity_module
-from . import versions
+from . import naming, versions
 
 _RESET = "\033[0m"
 _RED = "\033[31m"
@@ -14,12 +14,21 @@ _GREEN = "\033[32m"
 _ORDERED_SEVERITIES = ("critical", "high", "medium", "low", "unknown")
 
 
-def _fixed_version(vulnerability, ecosystem, installed):
-    """Smallest ``fixed`` event strictly greater than the installed version."""
+def _fixed_version(vulnerability, ecosystem, installed, name=None):
+    """Smallest greater ``fixed`` event, scoped to the package when supplied."""
     candidates = []
     for affected in vulnerability.get("affected") or []:
         if not isinstance(affected, dict):
             continue
+        if name is not None:
+            package = affected.get("package")
+            if not isinstance(package, dict) or package.get("ecosystem") != ecosystem:
+                continue
+            package_name = package.get("name")
+            if not isinstance(package_name, str):
+                continue
+            if naming.normalize(ecosystem, package_name) != naming.normalize(ecosystem, name):
+                continue
         for version_range in affected.get("ranges") or []:
             if not isinstance(version_range, dict):
                 continue
@@ -36,7 +45,7 @@ def _fixed_version(vulnerability, ecosystem, installed):
     return min(candidates, key=lambda value: versions.parse_version(ecosystem, value))
 
 
-def build_vulnerability(vulnerability, ecosystem, installed):
+def build_vulnerability(vulnerability, ecosystem, installed, name=None):
     """Turn a raw OSV vulnerability into its report representation."""
     severity, score, vector = severity_module.derive(vulnerability)
     identifier = vulnerability.get("id")
@@ -53,7 +62,7 @@ def build_vulnerability(vulnerability, ecosystem, installed):
         "severity": severity,
         "cvss_score": score,
         "cvss_vector": vector,
-        "fixed_version": _fixed_version(vulnerability, ecosystem, installed),
+        "fixed_version": _fixed_version(vulnerability, ecosystem, installed, name),
     }
 
 
@@ -61,7 +70,7 @@ def build_package(dependency, raw_vulnerabilities):
     """Turn a dependency plus its raw vulnerabilities into a report package."""
     if dependency.audited:
         vulnerabilities = [
-            build_vulnerability(vuln, dependency.ecosystem, dependency.version)
+            build_vulnerability(vuln, dependency.ecosystem, dependency.version, dependency.name)
             for vuln in raw_vulnerabilities
             if isinstance(vuln, dict)
         ]

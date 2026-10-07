@@ -3,6 +3,7 @@
 import json
 import os
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from .errors import NetworkError, UsageError
@@ -63,7 +64,7 @@ class FixtureSource:
 
 
 class OnlineSource:
-    """Production source: a single batched POST to the OSV.dev querybatch API."""
+    """Production source: batched lookup followed by full vulnerability records."""
 
     def __init__(self, url=OSV_QUERYBATCH_URL, timeout=TIMEOUT_SECONDS):
         self._url = url
@@ -83,6 +84,44 @@ class OnlineSource:
         request = urllib.request.Request(
             self._url, data=body, headers={"Content-Type": "application/json"}, method="POST"
         )
+        data = self._request_json(request)
+        if not isinstance(data, dict) or not isinstance(data.get("results"), list):
+            raise NetworkError("payload inesperado do OSV.dev: campo 'results' ausente")
+
+        results = data["results"]
+        if len(results) != len(ordered):
+            raise NetworkError(
+                "payload inesperado do OSV.dev: %d resultados para %d consultas"
+                % (len(results), len(ordered))
+            )
+
+        mapping = {}
+        records = {}
+        for triple, result in zip(ordered, results):
+            if not isinstance(result, dict):
+                raise NetworkError("payload inesperado do OSV.dev: resultado não é um objeto")
+            vulns = result.get("vulns", [])
+            if vulns is None:
+                vulns = []
+            if not isinstance(vulns, list):
+                raise NetworkError("payload inesperado do OSV.dev: campo 'vulns' inválido")
+            full_vulns = []
+            for vulnerability in vulns:
+                identifier = vulnerability.get("id") if isinstance(vulnerability, dict) else None
+                if not isinstance(identifier, str) or not identifier:
+                    raise NetworkError("payload inesperado do OSV.dev: id inválido")
+                if identifier not in records:
+                    url = self._url.rsplit("/", 1)[0] + "/vulns/" + urllib.parse.quote(identifier, safe="")
+                    record = self._request_json(urllib.request.Request(url, method="GET"))
+                    if not isinstance(record, dict) or record.get("id") != identifier:
+                        raise NetworkError("payload inesperado do OSV.dev: registro inválido")
+                    records[identifier] = record
+                full_vulns.append(records[identifier])
+            mapping[triple] = full_vulns
+        return mapping
+
+
+    def _request_json(self, request):
         try:
             with urllib.request.urlopen(request, timeout=self._timeout) as response:
                 status = getattr(response, "status", 200)
@@ -98,27 +137,7 @@ class OnlineSource:
             data = json.loads(raw.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise NetworkError("payload inesperado do OSV.dev: %s" % (error,)) from error
-        if not isinstance(data, dict) or not isinstance(data.get("results"), list):
-            raise NetworkError("payload inesperado do OSV.dev: campo 'results' ausente")
-
-        results = data["results"]
-        if len(results) != len(ordered):
-            raise NetworkError(
-                "payload inesperado do OSV.dev: %d resultados para %d consultas"
-                % (len(results), len(ordered))
-            )
-
-        mapping = {}
-        for triple, result in zip(ordered, results):
-            if not isinstance(result, dict):
-                raise NetworkError("payload inesperado do OSV.dev: resultado não é um objeto")
-            vulns = result.get("vulns", [])
-            if vulns is None:
-                vulns = []
-            if not isinstance(vulns, list):
-                raise NetworkError("payload inesperado do OSV.dev: campo 'vulns' inválido")
-            mapping[triple] = vulns
-        return mapping
+        return data
 
 
 def build_source(environ=None):
