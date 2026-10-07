@@ -1,0 +1,11 @@
+{
+  "PyPI:requests@2.19.0": [
+    {
+      "id": "GHSA-fixture-low-0001",
+      "aliases": [],
+      "summary": "Fixture-only low severity finding",
+      "database_specific": {"severity": "LOW"},
+      "affected": []
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "PyPI:requests@2.19.0": [
+    {
+      "id": "GHSA-9hjg-9r4m-mvj7",
+      "aliases": ["CVE-2018-18074"],
+      "summary": "Requests session fixation / credential leak on redirect",
+      "severity": [
+        {"type": "CVSS_V3", "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"}
+      ],
+      "affected": [
+        {
+          "package": {"ecosystem": "PyPI", "name": "requests"},
+          "ranges": [
+            {"type": "ECOSYSTEM", "events": [{"introduced": "0"}, {"fixed": "2.20.0"}]}
+          ]
+        }
+      ]
+    }
+  ],
+  "npm:lodash@4.17.11": [
+    {
+      "id": "GHSA-jf85-cpcp-j695",
+      "aliases": ["CVE-2019-10744"],
+      "summary": "Prototype pollution in lodash",
+      "severity": [{"type": "CVSS_V3", "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"}],
+      "database_specific": {"severity": "HIGH"},
+      "affected": [
+        {
+          "package": {"ecosystem": "npm", "name": "lodash"},
+          "ranges": [
+            {"type": "ECOSYSTEM", "events": [{"introduced": "0"}, {"fixed": "4.17.12"}]}
+          ]
+        }
+      ]
+    }
+  ]
+}
